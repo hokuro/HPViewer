@@ -1,0 +1,16 @@
+Symbol range map extraction starting
+Processing 14 files
+processing basashi\hpview\client\ClientProxy.java
+processing basashi\hpview\config\ConfigProperty.java
+processing basashi\hpview\config\ConfigValue.java
+processing basashi\hpview\config\CustomConfig.java
+processing basashi\hpview\config\IModConfig.java
+processing basashi\hpview\config\ModConfig.java
+processing basashi\hpview\core\CommonProxy.java
+processing basashi\hpview\core\EntityConfigurationEntry.java
+processing basashi\hpview\core\HPViewer.java
+processing basashi\hpview\core\ModCommon.java
+processing basashi\hpview\core\Tools.java
+processing basashi\hpview\core\log\ModLog.java
+processing basashi\hpview\event\McEventHandler.java
+processing basashi\hpview\gui\GuiOverLayHPView.java
