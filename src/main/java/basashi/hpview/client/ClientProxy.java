@@ -6,6 +6,6 @@ import net.minecraft.entity.player.EntityPlayer;
 
 public class ClientProxy extends CommonProxy {
 	public EntityPlayer getEntityPlayerInstance(){
-		return Minecraft.getMinecraft().thePlayer;
+		return Minecraft.getMinecraft().player;
 	}
 }

@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import basashi.hpview.config.ConfigValue;
-import net.minecraft.client.entity.EntityOtherPlayerMP;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraftforge.common.config.Configuration;
 
@@ -36,10 +34,10 @@ public class Tools {
 
 	public void scanforEntities() {
 		try {
-			EntityList.classToStringMapping.put(EntityOtherPlayerMP.class, "OtherPlayers");
+			//EntityList.classToStringMapping.put(EntityOtherPlayerMP.class, "OtherPlayers");
 		} catch (Throwable ex) {
 		}
-		searchMapForEntities(EntityList.classToStringMapping);
+		//searchMapForEntities(EntityList.classToStringMapping);
 	}
 
 

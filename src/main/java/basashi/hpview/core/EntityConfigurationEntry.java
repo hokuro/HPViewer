@@ -74,8 +74,8 @@ public class EntityConfigurationEntry {
 			scaleFactor = 10.0F;
 		} else if (entry.getName().equalsIgnoreCase("xolova.blued00r.divinerpg.mobs.EntityCaveclops")) {
 			scaleFactor = 10.0F;
-		} else if ((EntityList.classToStringMapping.get(entry) != null)
-				&& (((String) EntityList.classToStringMapping.get(entry)).equalsIgnoreCase("Linkbook"))) {
+		} else if ((EntityList.getKey(entry) != null)
+				&& (((String)  EntityList.getClassFromID(EntityList.getID(entry)).getName()).equalsIgnoreCase("Linkbook"))) {
 			ignore = true;
 		}
 		return loadEntityConfig(config, new EntityConfigurationEntry(entry, scaleFactor, xOffset, yOffset, SizeModifier,
@@ -98,8 +98,8 @@ public class EntityConfigurationEntry {
 			}
 		}
 		String ConfigName;
-		if (EntityList.classToStringMapping.containsKey(entry)) {
-			ConfigName = I18n.translateToLocal((String) EntityList.classToStringMapping.get(entry)) + " - " + mod;
+		if (EntityList.getKey(entry) != null) {
+			ConfigName = I18n.translateToLocal((String)  EntityList.getClassFromID(EntityList.getID(entry)).getName()) + " - " + mod;
 		} else {
 			ConfigName = entry.getName() + " - " + mod;
 		}
@@ -187,8 +187,8 @@ public class EntityConfigurationEntry {
 			}
 		}
 		String ConfigName;
-		if (EntityList.classToStringMapping.containsKey(entry)) {
-			ConfigName = I18n.translateToLocal((String) EntityList.classToStringMapping.get(entry)) + " - " + mod;
+		if (EntityList.getKey(entry) != null) {
+			ConfigName = I18n.translateToLocal((String) EntityList.getClassFromID(EntityList.getID(entry)).getName()) + " - " + mod;
 		} else {
 			ConfigName = entry.getName() + " - " + mod;
 		}

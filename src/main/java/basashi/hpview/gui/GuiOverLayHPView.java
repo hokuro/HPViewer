@@ -13,14 +13,15 @@ import org.lwjgl.opengl.GL11;
 import basashi.hpview.config.ConfigValue;
 import basashi.hpview.core.EntityConfigurationEntry;
 import basashi.hpview.core.HPViewer;
+import basashi.hpview.core.log.ModLog;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -44,11 +45,13 @@ public class GuiOverLayHPView extends Gui {
     public static DynamicTexture inventoryPNG;
 	public GuiOverLayHPView(Minecraft mc){
 		this.mc = mc;
-		this.fontRenderer = mc.fontRendererObj;
+		this.fontRenderer = mc.fontRenderer;
 	}
 
 	public void setViewEntity(EntityLivingBase view){
 		viewEntity = view;
+		if (view != null)
+		ModLog.log().debug("view:"+view.getName());
 	}
 
 	public void renderHPViwe(){
@@ -66,7 +69,7 @@ public class GuiOverLayHPView extends Gui {
 				}
 			}
 			GlStateManager.pushMatrix();
-			if (mc.thePlayer != null) {
+			if (mc.player != null) {
 				// ターゲットの情報を取得
 				EntityLivingBase el = viewEntity;
 				if (el != null) {
@@ -81,7 +84,7 @@ public class GuiOverLayHPView extends Gui {
 					String c = entityclass.getName().toLowerCase();
 					if (c.contains("entitygibs")) {
 						el = null;
-					} else if ((EntityList.classToStringMapping.get(el.getClass()) != null) && (((String) EntityList.classToStringMapping.get(el.getClass())).equalsIgnoreCase("Linkbook"))) {
+					} else if ((EntityList.getEntityString(el) != null) && (((String) EntityList.getEntityString(el)).equalsIgnoreCase("Linkbook"))) {
 						el = null;
 					} else if (configentry.IgnoreThisMob) {
 						el = null;
@@ -111,7 +114,7 @@ public class GuiOverLayHPView extends Gui {
 						if (el == null) {
 							tick -= 1;
 							try {
-								el = (EntityLivingBase) mc.theWorld.getEntityByID(LastTargeted);
+								el = (EntityLivingBase) mc.world.getEntityByID(LastTargeted);
 							} catch (Throwable ex) {
 							}
 							if (el == null) {
@@ -124,15 +127,15 @@ public class GuiOverLayHPView extends Gui {
 							return;
 						}
 						LastTargeted = el.getEntityId();
-						FontRenderer fontrenderer = mc.fontRendererObj;
+						FontRenderer fontrenderer = mc.fontRenderer;
 						Class entityclass = el.getClass();
 						EntityConfigurationEntry configentry = (EntityConfigurationEntry) HPViewer.tool.getEntityMap().get(entityclass);
 						if ((configentry.maxHP == -1) || (configentry.eyeHeight == -1.0F)) {
 							configentry.eyeHeight = el.getEyeHeight();
-							configentry.maxHP = MathHelper.floor_double(Math.ceil(el.getMaxHealth()));
+							configentry.maxHP = MathHelper.floor(Math.ceil(el.getMaxHealth()));
 						}
-						if (configentry.maxHP != MathHelper.floor_double(Math.ceil(el.getMaxHealth()))) {
-							configentry.maxHP = MathHelper.floor_double(Math.ceil(el.getMaxHealth()));
+						if (configentry.maxHP != MathHelper.floor(Math.ceil(el.getMaxHealth()))) {
+							configentry.maxHP = MathHelper.floor(Math.ceil(el.getMaxHealth()));
 						}
 						String Name = configentry.NameOverride;
 						if ((el instanceof EntityPlayer)) {
@@ -190,7 +193,7 @@ public class GuiOverLayHPView extends Gui {
 			}
 
 			Tessellator tessellator = Tessellator.getInstance();
-			VertexBuffer worldrenderer = tessellator.getBuffer();
+			BufferBuilder worldrenderer = tessellator.getBuffer();
 			try {
 				// 名前
 				int entityHealth = health;
@@ -201,9 +204,9 @@ public class GuiOverLayHPView extends Gui {
 
 				GL11.glEnable(3089);
 				try {
-					int boxLocX = MathHelper.floor_double(locX * scaledresolution.getScaleFactor());
-					int boxWidth = MathHelper.floor_double(50.0F * scaledresolution.getScaleFactor());
-					int boxLocY = MathHelper.floor_double(locY * scaledresolution.getScaleFactor());
+					int boxLocX = MathHelper.floor(locX * scaledresolution.getScaleFactor());
+					int boxWidth = MathHelper.floor(50.0F * scaledresolution.getScaleFactor());
+					int boxLocY = MathHelper.floor(locY * scaledresolution.getScaleFactor());
 					if (el != null) {
 						Class entityclass = el.getClass();
 						HPViewer.tool.getEntityMap().get(entityclass);
@@ -224,7 +227,7 @@ public class GuiOverLayHPView extends Gui {
 				GlStateManager.depthFunc(519);
 				try {
 					// 体力バーの長さ
-					int healthbarwidth = MathHelper.floor_float(locX + 85.0F * entityHealth / maxHealth);
+					int healthbarwidth = MathHelper.floor(locX + 85.0F * entityHealth / maxHealth);
 					if (entityHealth > maxHealth) {
 						healthbarwidth = locX + 85;
 						Health = "Health: " + String.valueOf(entityHealth) + "/" + String.valueOf(entityHealth);
@@ -236,9 +239,9 @@ public class GuiOverLayHPView extends Gui {
 					// 体力バー 現在地
 					drawGradientRect(locX+50,      locY + 13, healthbarwidth+50, locY + 26, new Color(0.0F, 1.0F, 0.0F, 0.5F).getRGB(), new Color(0.0F, 0.2F, 0.0F, 0.5F).getRGB(),  0.0F);
 					// 名前表示
-					Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(Name, locX+50 + (88 - Minecraft.getMinecraft().fontRendererObj.getStringWidth(Name)) / 2, locY + 2, new Color(1.0F, 1.0F, 1.0F, 1.0F).getRGB());
+					Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(Name, locX+50 + (88 - Minecraft.getMinecraft().fontRenderer.getStringWidth(Name)) / 2, locY + 2, new Color(1.0F, 1.0F, 1.0F, 1.0F).getRGB());
 					// 体力数値表示
-					Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(Health, locX+50 + (88 - Minecraft.getMinecraft().fontRendererObj.getStringWidth(Health)) / 2, locY + 16, new Color(1.0F, 1.0F, 1.0F, 1.0F).getRGB());
+					Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(Health, locX+50 + (88 - Minecraft.getMinecraft().fontRenderer.getStringWidth(Health)) / 2, locY + 16, new Color(1.0F, 1.0F, 1.0F, 1.0F).getRGB());
 
 					drawGradientRect(locX, locY, locX + 50, locY + 50, new Color(0.2F, 0.2F, 0.2F, 0.3F).getRGB(),new Color(0.1F, 0.1F, 0.1F, 0.3F).getRGB(), 0.0F);
 					drawGradientRect(locX, locY, locX + 2, locY + 50, Color.lightGray.getRGB(),Color.lightGray.getRGB(), 0.0F);
@@ -287,7 +290,7 @@ public class GuiOverLayHPView extends Gui {
 	        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 	        GlStateManager.shadeModel(7425);
 	        Tessellator tessellator = Tessellator.getInstance();
-	        VertexBuffer worldrenderer = tessellator.getBuffer();
+	        BufferBuilder worldrenderer = tessellator.getBuffer();
 	        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
 	        worldrenderer.pos((double)right, (double)top, (double)zLevel).color(f1, f2, f3, f).endVertex();
 	        worldrenderer.pos((double)left, (double)top, (double)zLevel).color(f1, f2, f3, f).endVertex();
@@ -315,7 +318,7 @@ public class GuiOverLayHPView extends Gui {
 							new Color(0.0F, 0.0F, 0.0F, 0.0F).getRGB(), new Color(0.6F, 0.6F, 0.6F, 0.8F).getRGB(),
 							0.0F);
 				}
-				if (el == Minecraft.getMinecraft().thePlayer) {
+				if (el == Minecraft.getMinecraft().player) {
 					GlStateManager.translate(locX + 25 + configentry.XOffset, locY + 52 + configentry.YOffset - 30.0F, 1.0F);
 				} else {
 					GlStateManager.translate(locX + 25 + configentry.XOffset, locY + 52 + configentry.YOffset, 1.0F);
@@ -346,7 +349,7 @@ public class GuiOverLayHPView extends Gui {
 				} else {
 					int hurt = el.hurtTime;
 					el.hurtTime = 0;
-					GlStateManager.rotate(180.0F - Minecraft.getMinecraft().thePlayer.rotationYaw, 0.0F, -1.0F, 0.0F);
+					GlStateManager.rotate(180.0F - Minecraft.getMinecraft().player.rotationYaw, 0.0F, -1.0F, 0.0F);
 					GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 					try {
 						renderEntity(el);
@@ -367,7 +370,7 @@ public class GuiOverLayHPView extends Gui {
 		//GL11.glPushAttrib(8192);
 
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer worldrenderer = tessellator.getBuffer();
+		BufferBuilder worldrenderer = tessellator.getBuffer();
 		Render render = this.mc.getRenderManager().getEntityClassRenderObject(el.getClass());
 		try {
 			GlStateManager.disableBlend();
