@@ -13,7 +13,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod(modid = ModCommon.MOD_ID, name = ModCommon.MOD_NAME, version = ModCommon.MOD_VERSION)
+@Mod(modid = ModCommon.MOD_ID,
+name = ModCommon.MOD_NAME,
+version = ModCommon.MOD_VERSION,
+acceptedMinecraftVersions = ModCommon.MOD_ACCEPTED_MC_VERSIONS)
 public class HPViewer {
 	public static boolean s_bUpdateMessageSent = false;
 	public static String s_sUpdateMessage="";
