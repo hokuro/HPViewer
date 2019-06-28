@@ -4,9 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import basashi.hpview.config.ConfigValue;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLiving;
+import basashi.config.Configuration;
+import basashi.config.Property;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityGhast;
@@ -15,26 +16,24 @@ import net.minecraft.entity.monster.EntityMagmaCube;
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraft.util.registry.IRegistry;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 public class EntityConfigurationEntry {
 	public static HashMap<Integer, Integer> maxHealthOverride = new HashMap(200);
 	public final boolean AppendBaby;
-	public final float BabyScaleFactor;
+	public float BabyScaleFactor=1.0F;
 	public final Class Clazz;
-	public final float EntitySizeScaling;
+	public float EntitySizeScaling=1.0F;
 	public float eyeHeight;
 	public final boolean IgnoreThisMob;
 	public int maxHP;
-	public final String NameOverride;
-	public final float ScaleFactor;
-	public final float XOffset;
-	public final float YOffset;
+	public String NameOverride="";
+	public float ScaleFactor=10.0F;
+	public float XOffset = 0.0F;
+	public float YOffset = -5.0F;
 
-	public static EntityConfigurationEntry generateDefaultConfiguration(Configuration config, Class entry) {
+	public static EntityConfigurationEntry generateDefaultConfiguration(Configuration config, EntityLivingBase el, Class entry) {
 		boolean ignore = false;
 		boolean appendBabyName = true;
 		float scaleFactor = 22.0F;
@@ -42,6 +41,7 @@ public class EntityConfigurationEntry {
 		float yOffset = -5.0F;
 		float SizeModifier = 0.0F;
 		float BabyScaleFactor = 2.0F;
+		try{
 		if (entry == EntityIronGolem.class) {
 			scaleFactor = 16.0F;
 		} else if ((entry == EntitySlime.class) || (entry == EntityMagmaCube.class)) {
@@ -74,32 +74,33 @@ public class EntityConfigurationEntry {
 			scaleFactor = 10.0F;
 		} else if (entry.getName().equalsIgnoreCase("xolova.blued00r.divinerpg.mobs.EntityCaveclops")) {
 			scaleFactor = 10.0F;
-		} else if ((EntityList.getKey(entry) != null)
-				&& (((String)  EntityList.getClassFromID(EntityList.getID(entry)).getName()).equalsIgnoreCase("Linkbook"))) {
+		} else if ((IRegistry.field_212629_r.func_212608_b(el.getType().getRegistryName()) != null)) {
+			ignore = true;
+		}
+		}catch(NullPointerException e){
 			ignore = true;
 		}
 		return loadEntityConfig(config, new EntityConfigurationEntry(entry, scaleFactor, xOffset, yOffset, SizeModifier,
-				BabyScaleFactor, appendBabyName, "", ignore, 20, 1.5F));
+				BabyScaleFactor, appendBabyName, "", ignore, 20, 1.5F),el);
 	}
 
-	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece) {
-		return loadEntityConfig(config, ece, null);
-	}
+//	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece, EntityLivingBase el) {
+//		return loadEntityConfig(config, ece, el);
+//	}
 
 	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece,
-			EntityLiving el) {
+			EntityLivingBase el) {
 		Class entry = ece.Clazz;
 		String mod = "Vanilla";
-		EntityRegistry.EntityRegistration er = EntityRegistry.instance().lookupModSpawn(ece.Clazz, true);
-		if (er != null) {
+		if (el != null) {
 			try {
-				mod = er.getContainer().getMetadata().name;
+				mod = el.getType().getRegistryName().getNamespace();
 			} catch (Throwable ex) {
 			}
 		}
 		String ConfigName;
-		if (EntityList.getKey(entry) != null) {
-			ConfigName = I18n.translateToLocal((String)  EntityList.getClassFromID(EntityList.getID(entry)).getName()) + " - " + mod;
+		if (IRegistry.field_212629_r.func_212608_b(el.getType().getRegistryName()) != null) {
+			ConfigName = I18n.format((String)  el.getType().getRegistryName().toString()) + " - " + mod;
 		} else {
 			ConfigName = entry.getName() + " - " + mod;
 		}
@@ -172,23 +173,22 @@ public class EntityConfigurationEntry {
 		return tmp;
 	}
 
-	public static void saveEntityConfig(EntityConfigurationEntry ece) {
-		File configfolder = new File(ConfigValue.CONFIG_FILE().getParentFile(), "DIAdvancedCompatibility");
+	public static void saveEntityConfig(EntityConfigurationEntry ece, EntityLivingBase el) {
+		File configfolder = new File(FMLPaths.CONFIGDIR.get().toString(), "DIAdvancedCompatibility");
 		configfolder.mkdir();
 		Class entry = ece.Clazz;
 		String FullConfigFileName = "CombinedConfig.cfg";
 		File configfile = new File(configfolder, FullConfigFileName);
 		String mod = "Vanilla";
-		EntityRegistry.EntityRegistration er = EntityRegistry.instance().lookupModSpawn(ece.Clazz, true);
-		if (er != null) {
+		if (el != null) {
 			try {
-				mod = er.getContainer().getMetadata().name;
+				mod = el.getType().getRegistryName().getNamespace();
 			} catch (Throwable ex) {
 			}
 		}
 		String ConfigName;
-		if (EntityList.getKey(entry) != null) {
-			ConfigName = I18n.translateToLocal((String) EntityList.getClassFromID(EntityList.getID(entry)).getName()) + " - " + mod;
+		if (el != null) {
+			ConfigName = I18n.format((String) el.getType().getRegistryName().toString()) + " - " + mod;
 		} else {
 			ConfigName = entry.getName() + " - " + mod;
 		}
@@ -220,7 +220,7 @@ public class EntityConfigurationEntry {
 			float babyscale, boolean appendBaby, boolean ignoreThisMob, int maxHP, float eyeHeight) {
 		this(clazz, scale, xoffset, yoffset, sizeScaling, babyscale, appendBaby, "", ignoreThisMob, maxHP, eyeHeight);
 	}
-
+//
 	public EntityConfigurationEntry(Class clazz, float scale, float xoffset, float yoffset, float sizeScaling,
 			float babyscale, boolean appendBaby, String nameOverride, boolean ignoreThisMob, int maxHP,
 			float eyeHeight) {

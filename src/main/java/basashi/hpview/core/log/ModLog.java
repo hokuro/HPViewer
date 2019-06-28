@@ -1,14 +1,10 @@
 package basashi.hpview.core.log;
 
 
-import java.util.Locale;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.ThreadContext;
 
 import basashi.hpview.core.ModCommon;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 
 public class ModLog {
@@ -25,7 +21,7 @@ public class ModLog {
 	// コンストラクタ
 	private ModLog(){
 		_log = LogManager.getLogger(ModCommon.MOD_NAME);
-		ThreadContext.put("side", FMLLaunchHandler.side().name().toLowerCase(Locale.ENGLISH));
+		//ThreadContext.put("side", FMLCommonLaunchHandler.().name().toLowerCase(Locale.ENGLISH));
 		configured = true;
 	}
 

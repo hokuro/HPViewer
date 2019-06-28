@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random ;
 
-import basashi.hpview.config.ConfigValue;
+import basashi.hpview.config.MyConfig;
 import basashi.hpview.core.HPViewer;
 import basashi.hpview.core.Tools;
 import basashi.hpview.core.log.ModLog;
@@ -17,25 +17,26 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceFluidMode;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class McEventHandler{
 	public static int LastTargeted = 0;
-	private static Minecraft mc = Minecraft.getMinecraft();
-	public static Map<Integer, Collection> potionEffects = new HashMap();
+	private static Minecraft mc = Minecraft.getInstance();
+	public static Map<Integer, Collection> potionEffects = new HashMap<Integer, Collection>();
 	public static boolean searched = false;
 	public static int tick = 0;
-	public static Map<Class, List<Class>> entityParts = new HashMap();
+	public static Map<Class, List<Class>> entityParts = new HashMap<Class, List<Class>>();
 	public static int dim = -2;
 	private static boolean doParticles = false;
-	private static HashMap<Integer, Integer> healths = new HashMap();
+	private static HashMap<Integer, Integer> healths = new HashMap<Integer, Integer>();
 	private GuiOverLayHPView view = null;
 
 	private long time = -1L;
@@ -45,7 +46,7 @@ public class McEventHandler{
 
 	@SubscribeEvent
 	public void gameOverlayEvent(RenderGameOverlayEvent evt) {
-		if (ConfigValue.General.portraitEnabled) {
+		if (MyConfig._general.portraitEnabled.get()) {
 			if ((evt.getType() == RenderGameOverlayEvent.ElementType.ALL)
 					&& ((evt instanceof RenderGameOverlayEvent.Post))) {
 				try {
@@ -54,12 +55,12 @@ public class McEventHandler{
 							LastTargeted = 0;
 							return;
 						}
-						if ((mc.gameSettings.showDebugInfo) && (ConfigValue.General.DebugHidesWindow)) {
+						if ((mc.gameSettings.showDebugInfo) && (MyConfig._general.DebugHidesWindow.get())) {
 							LastTargeted = 0;
 							return;
 						}
 						if ((mc.currentScreen != null)
-								&& (!(Minecraft.getMinecraft().currentScreen instanceof GuiChat))) {
+								&& (!(Minecraft.getInstance().currentScreen instanceof GuiChat))) {
 							LastTargeted = 0;
 							return;
 						}
@@ -96,7 +97,7 @@ public class McEventHandler{
 			// 見ているエンティティがあるかどうか
 			if ((viewEntity != null) && (viewEntity instanceof EntityLivingBase)) {
 				World worldObj = viewEntity.world;//　　.worldObj;
-				RayTraceResult objectMouseOver = viewEntity.rayTrace(parDistance, tick);
+				RayTraceResult objectMouseOver = viewEntity.rayTrace(parDistance, tick, RayTraceFluidMode.ALWAYS);
 
 				// プレイヤーの位置
 				playerPosition = new Vec3d(viewEntity.getPosition());
@@ -106,11 +107,11 @@ public class McEventHandler{
 				// 視線ベクトル
 				Vec3d dirVec = viewEntity.getLookVec();
 				// 視線座標
-				lookFarCoord = playerPosition.addVector(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance);
+				lookFarCoord = playerPosition.add(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance);
 
 				// 視線が当たっているMobを取得
 				List<EntityLivingBase> targettedEntities = worldObj.getEntitiesWithinAABB(EntityLivingBase.class,
-						 viewEntity.getEntityBoundingBox().expand(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance));
+						 viewEntity.getBoundingBox().expand(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance));
 				// 自分自身はMobから外す
 				targettedEntities.remove(viewEntity);
 				for (EntityLivingBase targettedEntity : targettedEntities) {
@@ -118,7 +119,7 @@ public class McEventHandler{
 						// エンティティとの距離
 						double precheck = viewEntity.getDistance(targettedEntity);
 						// 視線が当たっているかどうか確認
-						RayTraceResult mopElIntercept = targettedEntity.getEntityBoundingBox().calculateIntercept(playerPosition.addVector(0, viewEntity.getEyeHeight(), 0),lookFarCoord);
+						RayTraceResult mopElIntercept = targettedEntity.getBoundingBox().calculateIntercept(playerPosition.add(0, viewEntity.getEyeHeight(), 0),lookFarCoord);
 						if ((mopElIntercept != null) && (precheck < closest)) {
 							Return = targettedEntity;
 							closest = precheck;
@@ -127,7 +128,7 @@ public class McEventHandler{
 					}
 				}
 			}
-			if ((Return != null) && (!Return.isDead) && (!Return.isInvisible())) {
+			if ((Return != null) && (Return.isAlive()) && (!Return.isInvisible())) {
 				return Return;
 			}
 		} catch (Throwable ex) {
@@ -139,36 +140,36 @@ public class McEventHandler{
 	public void updateMouseOversSkinned(float Tick) {
 		try {
 			if (mc.player != null) {
-				EntityLivingBase el = getClosestLivingEntity(ConfigValue.General.mouseoverRange, Tick);
+				EntityLivingBase el = getClosestLivingEntity(MyConfig._general.mouseoverRange.get(), Tick);
 				view.setViewEntity(el);
 		}
 		}catch(Exception ex){}
 	}
 
 	  //Called when the client ticks.
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
 	public void tickEvent(TickEvent.ClientTickEvent event) {
 		  EntityPlayer p;
-			if ((Minecraft.getMinecraft().currentScreen == null) || ((Minecraft.getMinecraft().currentScreen instanceof GuiChat))) {
-				p = Minecraft.getMinecraft().player;
+			if ((Minecraft.getInstance().currentScreen == null) || ((Minecraft.getInstance().currentScreen instanceof GuiChat))) {
+				p = Minecraft.getInstance().player;
 				if ((p != null) && (p.world != null)) {
 					World world = p.world;
 					AxisAlignedBB bb = new AxisAlignedBB(
-							p.posX - ConfigValue.General.mouseoverRange,
-							p.posY - ConfigValue.General.mouseoverRange, p.posZ - ConfigValue.General.mouseoverRange,
-							p.posX + ConfigValue.General.mouseoverRange, p.posY + ConfigValue.General.mouseoverRange,
-							p.posZ + ConfigValue.General.mouseoverRange);
+							p.posX - MyConfig._general.mouseoverRange.get(),
+							p.posY - MyConfig._general.mouseoverRange.get(), p.posZ - MyConfig._general.mouseoverRange.get(),
+							p.posX + MyConfig._general.mouseoverRange.get(), p.posY + MyConfig._general.mouseoverRange.get(),
+							p.posZ + MyConfig._general.mouseoverRange.get());
 					List<EntityLivingBase> entityList = world.getEntitiesWithinAABB(EntityLivingBase.class, bb);
 					if ((entityList != null) && (entityList.size() > 0)) {
 						for (EntityLivingBase el : entityList) {
 							if (el != null) {
 								if (((el instanceof EntityPlayer)) &&
-										(Tools.donators.contains(((EntityPlayer) el).getName().toLowerCase())) &&
-										((el != p) || (Minecraft.getMinecraft().gameSettings.thirdPersonView != 0))) {
+										(Tools.donators.contains(((EntityPlayer) el).getName().toString().toLowerCase())) &&
+										((el != p) || (Minecraft.getInstance().gameSettings.thirdPersonView != 0))) {
 									double darkness = rnd.nextDouble() / 4.0D;
 								}
-								if (ConfigValue.General.popOffsEnabled) {
+								if (MyConfig._general.popOffsEnabled.get()) {
 									int currentHealth = MathHelper.floor((float) Math.ceil(el.getHealth()));
 									if (healths.containsKey(Integer.valueOf(el.getEntityId()))) {
 										int lastHealth = ((Integer) healths.get(Integer.valueOf(el.getEntityId()))).intValue();

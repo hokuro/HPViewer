@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import basashi.hpview.config.ConfigValue;
+import basashi.config.Configuration;
 import net.minecraft.entity.EntityLiving;
-import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 public class Tools {
 	public static final Set<String> donators = new HashSet();
@@ -42,7 +42,8 @@ public class Tools {
 
 
 	private void searchMapForEntities(Map theMap) {
-		File configfolder = new File(ConfigValue.CONFIG_FILE().getParentFile(), "DIAdvancedCompatibility");
+		// TODO: なんかファイル
+		File configfolder = new File(FMLPaths.CONFIGDIR.get().toString(), "DIAdvancedCompatibility");
 		configfolder.mkdirs();
 		String FullConfigFileName = "CombinedConfig.cfg";
 		File configfile = new File(configfolder, FullConfigFileName);
@@ -50,11 +51,12 @@ public class Tools {
 			configfile.createNewFile();
 		} catch (IOException ex) {
 		}
+
 		Configuration config = new Configuration(configfile);
 		Set<Class> set = theMap.keySet();
 		for (Class entry : set) {
 			if ((entry != null) && (EntityLiving.class.isAssignableFrom(entry))) {
-				entityMap.put(entry, EntityConfigurationEntry.generateDefaultConfiguration(config, entry));
+				entityMap.put(entry, EntityConfigurationEntry.generateDefaultConfiguration(config, null, entry));
 			}
 		}
 		config.save();
