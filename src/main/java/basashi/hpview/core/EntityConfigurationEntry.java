@@ -7,16 +7,16 @@ import java.util.HashMap;
 import basashi.config.Configuration;
 import basashi.config.Property;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.boss.EntityWither;
-import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.entity.monster.EntityGhast;
-import net.minecraft.entity.monster.EntityIronGolem;
-import net.minecraft.entity.monster.EntityMagmaCube;
-import net.minecraft.entity.monster.EntitySlime;
-import net.minecraft.entity.passive.EntityOcelot;
-import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.util.registry.IRegistry;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.boss.WitherEntity;
+import net.minecraft.entity.monster.EndermanEntity;
+import net.minecraft.entity.monster.GhastEntity;
+import net.minecraft.entity.monster.MagmaCubeEntity;
+import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
+import net.minecraft.entity.passive.OcelotEntity;
+import net.minecraft.entity.passive.SquidEntity;
+import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class EntityConfigurationEntry {
@@ -33,7 +33,7 @@ public class EntityConfigurationEntry {
 	public float XOffset = 0.0F;
 	public float YOffset = -5.0F;
 
-	public static EntityConfigurationEntry generateDefaultConfiguration(Configuration config, EntityLivingBase el, Class entry) {
+	public static EntityConfigurationEntry generateDefaultConfiguration(Configuration config, LivingEntity el, Class entry) {
 		boolean ignore = false;
 		boolean appendBabyName = true;
 		float scaleFactor = 22.0F;
@@ -42,23 +42,23 @@ public class EntityConfigurationEntry {
 		float SizeModifier = 0.0F;
 		float BabyScaleFactor = 2.0F;
 		try{
-		if (entry == EntityIronGolem.class) {
+		if (entry == IronGolemEntity.class) {
 			scaleFactor = 16.0F;
-		} else if ((entry == EntitySlime.class) || (entry == EntityMagmaCube.class)) {
+		} else if ((entry == SlimeEntity.class) || (entry == MagmaCubeEntity.class)) {
 			scaleFactor = 5.0F;
 			SizeModifier = 2.0F;
 			yOffset = -5.0F;
-		} else if (entry == EntityEnderman.class) {
+		} else if (entry == EndermanEntity.class) {
 			scaleFactor = 15.0F;
-		} else if (entry == EntityGhast.class) {
+		} else if (entry == GhastEntity.class) {
 			scaleFactor = 7.0F;
 			yOffset = -20.0F;
-		} else if (entry == EntitySquid.class) {
+		} else if (entry == SquidEntity.class) {
 			yOffset = -17.0F;
-		} else if (entry == EntityOcelot.class) {
+		} else if (entry == OcelotEntity.class) {
 			scaleFactor = 25.0F;
 			yOffset = -5.0F;
-		} else if (entry == EntityWither.class) {
+		} else if (entry == WitherEntity.class) {
 			scaleFactor = 15.0F;
 			yOffset = 5.0F;
 		} else if (entry.getName().equalsIgnoreCase("thaumcraft.common.entities.EntityWisp")) {
@@ -74,7 +74,7 @@ public class EntityConfigurationEntry {
 			scaleFactor = 10.0F;
 		} else if (entry.getName().equalsIgnoreCase("xolova.blued00r.divinerpg.mobs.EntityCaveclops")) {
 			scaleFactor = 10.0F;
-		} else if ((IRegistry.field_212629_r.func_212608_b(el.getType().getRegistryName()) != null)) {
+		} else if ((Registry.ENTITY_TYPE.getValue(el.getType().getRegistryName()).isPresent())) {
 			ignore = true;
 		}
 		}catch(NullPointerException e){
@@ -84,12 +84,12 @@ public class EntityConfigurationEntry {
 				BabyScaleFactor, appendBabyName, "", ignore, 20, 1.5F),el);
 	}
 
-//	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece, EntityLivingBase el) {
+//	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece, LivingEntity el) {
 //		return loadEntityConfig(config, ece, el);
 //	}
 
 	public static EntityConfigurationEntry loadEntityConfig(Configuration config, EntityConfigurationEntry ece,
-			EntityLivingBase el) {
+			LivingEntity el) {
 		Class entry = ece.Clazz;
 		String mod = "Vanilla";
 		if (el != null) {
@@ -99,7 +99,7 @@ public class EntityConfigurationEntry {
 			}
 		}
 		String ConfigName;
-		if (IRegistry.field_212629_r.func_212608_b(el.getType().getRegistryName()) != null) {
+		if (Registry.ENTITY_TYPE.getValue(el.getType().getRegistryName()).isPresent()) {
 			ConfigName = I18n.format((String)  el.getType().getRegistryName().toString()) + " - " + mod;
 		} else {
 			ConfigName = entry.getName() + " - " + mod;
@@ -173,7 +173,7 @@ public class EntityConfigurationEntry {
 		return tmp;
 	}
 
-	public static void saveEntityConfig(EntityConfigurationEntry ece, EntityLivingBase el) {
+	public static void saveEntityConfig(EntityConfigurationEntry ece, LivingEntity el) {
 		File configfolder = new File(FMLPaths.CONFIGDIR.get().toString(), "DIAdvancedCompatibility");
 		configfolder.mkdir();
 		Class entry = ece.Clazz;

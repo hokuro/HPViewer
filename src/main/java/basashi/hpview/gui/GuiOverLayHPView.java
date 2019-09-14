@@ -7,6 +7,8 @@ import java.nio.FloatBuffer;
 import org.apache.commons.lang3.BooleanUtils;
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+
 import basashi.config.Configuration;
 import basashi.hpview.config.MyConfig;
 import basashi.hpview.core.EntityConfigurationEntry;
@@ -14,27 +16,28 @@ import basashi.hpview.core.HPViewer;
 import basashi.hpview.core.log.ModLog;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.IRegistry;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-public class GuiOverLayHPView extends Gui {
+public class GuiOverLayHPView extends Screen {
 	private final Minecraft mc;
 	private final FontRenderer fontRenderer;
-	private EntityLivingBase viewEntity;
+	private LivingEntity viewEntity;
     public static final FloatBuffer DEPTH = GLAllocation.createDirectFloatBuffer(32);
     public static final FloatBuffer BLEND = GLAllocation.createDirectFloatBuffer(32);
    //private ScaledResolution scaledresolution;
@@ -42,11 +45,12 @@ public class GuiOverLayHPView extends Gui {
     public static int tick = 0;
     public static DynamicTexture inventoryPNG;
 	public GuiOverLayHPView(Minecraft mc){
+		super(new StringTextComponent(""));
 		this.mc = mc;
 		this.fontRenderer = mc.fontRenderer;
 	}
 
-	public void setViewEntity(EntityLivingBase view){
+	public void setViewEntity(LivingEntity view){
 		viewEntity = view;
 		if (view != null)
 		ModLog.log().debug("view:"+view.getName());
@@ -68,7 +72,7 @@ public class GuiOverLayHPView extends Gui {
 			GlStateManager.pushMatrix();
 			if (mc.player != null) {
 				// ターゲットの情報を取得
-				EntityLivingBase el = viewEntity;
+				LivingEntity el = viewEntity;
 				if (el != null) {
 					Class entityclass = el.getClass();
 					EntityConfigurationEntry configentry = (EntityConfigurationEntry) HPViewer.tool.getEntityMap().get(entityclass);
@@ -82,7 +86,7 @@ public class GuiOverLayHPView extends Gui {
 					String c = entityclass.getName().toLowerCase();
 					if (c.contains("entitygibs")) {
 						el = null;
-					} else if (((IRegistry.field_212629_r.func_212608_b(el.getType().getRegistryName())) != null) &&
+					} else if (((Registry.ENTITY_TYPE.getOrDefault(el.getType().getRegistryName())) != null) &&
 					(el.getType().getRegistryName().getPath().equalsIgnoreCase("Linkbook"))) {
 						el = null;
 //					} else if (configentry.IgnoreThisMob) {
@@ -112,12 +116,12 @@ public class GuiOverLayHPView extends Gui {
 					}
 					GlStateManager.pushMatrix();
 					try {
-						GlStateManager.translated((1.0F - MyConfig._general.guiScale.get()) * locX, (1.0F - MyConfig._general.guiScale.get()) * locY, 0.0F);
+						GlStateManager.translated((1.0D - MyConfig._general.guiScale.get()) * locX, (1.0D - MyConfig._general.guiScale.get()) * locY, 0.0D);
 						GlStateManager.scaled(MyConfig._general.guiScale.get(), MyConfig._general.guiScale.get(), MyConfig._general.guiScale.get());
 						if (el == null) {
 							tick -= 1;
 							try {
-								el = (EntityLivingBase) mc.world.getEntityByID(LastTargeted);
+								el = (LivingEntity) mc.world.getEntityByID(LastTargeted);
 							} catch (Throwable ex) {
 							}
 							if (el == null) {
@@ -141,7 +145,7 @@ public class GuiOverLayHPView extends Gui {
 							configentry.maxHP = MathHelper.floor(Math.ceil(el.getMaxHealth()));
 						}
 						String Name = null;//configentry.NameOverride;
-						if ((el instanceof EntityPlayer)) {
+						if ((el instanceof PlayerEntity)) {
 							Name = el.getName().toString();
 						}
 						if ((Name == null) || ("".equals(Name))) {
@@ -174,7 +178,7 @@ public class GuiOverLayHPView extends Gui {
 		}
 	}
 
-	public void DrawPortraitUnSkinned(int locX, int locY, String Name, int health, int maxHealth, EntityLivingBase el) {
+	public void DrawPortraitUnSkinned(int locX, int locY, String Name, int health, int maxHealth, LivingEntity el) {
 		double scFactor = Minecraft.getInstance().mainWindow.getGuiScaleFactor();
 
 		int depthzfun;
@@ -182,13 +186,13 @@ public class GuiOverLayHPView extends Gui {
 		boolean blend;
 		try {
 			try{
-				GlStateManager.getFloatv(2932, DEPTH);
+				GlStateManager.getMatrix(2932, DEPTH);
 				depthzfun = (int)DEPTH.get();
 				DEPTH.clear();
-				GlStateManager.getFloatv(2929, BLEND);
+				GlStateManager.getMatrix(2929, BLEND);
 				depthTest = BooleanUtils.toBoolean((int)BLEND.get());
 				BLEND.clear();
-				GlStateManager.getFloatv(3042, BLEND);
+				GlStateManager.getMatrix(3042, BLEND);
 				blend = BooleanUtils.toBoolean((int)BLEND.get());
 				BLEND.clear();
 			}catch(Exception ex){
@@ -273,7 +277,7 @@ public class GuiOverLayHPView extends Gui {
 			} else {
 				GlStateManager.disableBlend();
 			}
-			GlStateManager.resetColor();
+			GlStateManager.clearCurrentColor();
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}
@@ -288,7 +292,7 @@ public class GuiOverLayHPView extends Gui {
 	        float f5 = (float)(c2Rgb >> 16 & 255) / 255.0F;
 	        float f6 = (float)(c2Rgb >> 8 & 255) / 255.0F;
 	        float f7 = (float)(c2Rgb & 255) / 255.0F;
-	        GlStateManager.disableTexture2D();
+	        GlStateManager.disableTexture();
 	        GlStateManager.enableBlend();
 	        GlStateManager.disableAlphaTest();
 	        GlStateManager.blendFuncSeparate(770, 771, 1, 0);
@@ -304,15 +308,15 @@ public class GuiOverLayHPView extends Gui {
 	        GlStateManager.shadeModel(7424);
 	        GlStateManager.disableBlend();
 	        GlStateManager.enableAlphaTest();
-	        GlStateManager.enableTexture2D();
+	        GlStateManager.enableTexture();
 	}
 
 
 
-	public void drawTargettedMobPreview(EntityLivingBase el, int locX, int locY) {
+	public void drawTargettedMobPreview(LivingEntity el, int locX, int locY) {
 		EntityConfigurationEntry configentry = (EntityConfigurationEntry) HPViewer.tool.getEntityMap().get(el.getClass());
 		if (configentry == null) {
-			configentry = (EntityConfigurationEntry) HPViewer.tool.getEntityMap().get(EntityVillager.class);
+			configentry = (EntityConfigurationEntry) HPViewer.tool.getEntityMap().get(VillagerEntity.class);
 		}
 		GlStateManager.pushMatrix();
 		try {
@@ -369,24 +373,24 @@ public class GuiOverLayHPView extends Gui {
 		GlStateManager.popMatrix();
 	}
 
-	public void renderEntity(EntityLivingBase el) {
-		GlStateManager.pushLightingAttrib();
+	public void renderEntity(LivingEntity el) {
+		GlStateManager.pushLightingAttributes();
 		//GL11.glPushAttrib(8192);
 
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder worldrenderer = tessellator.getBuffer();
-		Render render = this.mc.getRenderManager().getEntityClassRenderObject(el.getClass());
+		EntityRenderer<Entity> render = this.mc.getRenderManager().getRenderer(el.getClass());
 		try {
 			GlStateManager.disableBlend();
 			GlStateManager.enableDepthTest();
 			render.doRender(el, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-			GlStateManager.clear(256);
+			GlStateManager.clear(256, false);
 		} catch (Throwable ex) {
 //			if (Tessellator.instance.isDrawing) {
 //				Tessellator.instance.draw();
 //			}
 		}
-		GlStateManager.popAttrib();
+		GlStateManager.popAttributes();
 //		Tessellator.instance.setBrightness(240);
 //		Tessellator.instance.setColorRGBA(255, 255, 255, 255);
 		GlStateManager.blendFunc(770, 771);

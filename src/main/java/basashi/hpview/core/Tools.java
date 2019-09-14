@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import basashi.config.Configuration;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class Tools {
@@ -55,7 +55,7 @@ public class Tools {
 		Configuration config = new Configuration(configfile);
 		Set<Class> set = theMap.keySet();
 		for (Class entry : set) {
-			if ((entry != null) && (EntityLiving.class.isAssignableFrom(entry))) {
+			if ((entry != null) && (LivingEntity.class.isAssignableFrom(entry))) {
 				entityMap.put(entry, EntityConfigurationEntry.generateDefaultConfiguration(config, null, entry));
 			}
 		}

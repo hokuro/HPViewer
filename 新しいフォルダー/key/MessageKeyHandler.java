@@ -1,7 +1,7 @@
 package basashi.hpview.key;
 
 import basashi.hpview.core.ModCommon;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -19,7 +19,7 @@ public class MessageKeyHandler implements IMessageHandler<MessageKey, IMessage> 
 
 	  @Override
 	    public IMessage onMessage(MessageKey message, MessageContext ctx) {
-	        EntityPlayer entityPlayer = ctx.getServerHandler().playerEntity;
+	        PlayerEntity entityPlayer = ctx.getServerHandler().playerEntity;
 	        //受け取ったMessageクラスのkey変数の数字をチャットに出力
 
 	        entityPlayer.addChatComponentMessage(new ChatComponentText(String.format("Received byte %d", message.key)));

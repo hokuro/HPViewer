@@ -39,7 +39,7 @@ import net.minecraft.entity.monster.EntityWitch;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.MathHelper;
@@ -215,8 +215,8 @@ public class GuiTool extends GuiIngame {
 		if ((el instanceof IMob)) {
 			hostile = true;
 		} else {
-			if ((el instanceof EntityPlayer)) {
-				if (enemies.contains(((EntityPlayer) el).getName())) {
+			if ((el instanceof PlayerEntity)) {
+				if (enemies.contains(((PlayerEntity) el).getName())) {
 					hostile = true;
 				} else {
 					hostile = false;
@@ -261,7 +261,7 @@ public class GuiTool extends GuiIngame {
 				if (el.getCreatureAttribute() == EnumCreatureAttribute.ARTHROPOD) {
 					glTexX = 3.0F * step;
 				} else {
-					if (((el instanceof EntityPlayer)) || ((el instanceof EntityWitch))
+					if (((el instanceof PlayerEntity)) || ((el instanceof EntityWitch))
 							|| ((el instanceof EntityVillager)) || ((el instanceof EntityIronGolem))) {
 						glTexX = 2.0F * step;
 					} else {

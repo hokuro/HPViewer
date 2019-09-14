@@ -12,20 +12,18 @@ import basashi.hpview.core.Tools;
 import basashi.hpview.core.log.ModLog;
 import basashi.hpview.gui.GuiOverLayHPView;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiChat;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceFluidMode;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class McEventHandler{
 	public static int LastTargeted = 0;
@@ -60,7 +58,7 @@ public class McEventHandler{
 							return;
 						}
 						if ((mc.currentScreen != null)
-								&& (!(Minecraft.getInstance().currentScreen instanceof GuiChat))) {
+								&& (!(Minecraft.getInstance().currentScreen instanceof ChatScreen))) {
 							LastTargeted = 0;
 							return;
 						}
@@ -86,41 +84,37 @@ public class McEventHandler{
 		}
 	}
 
-	public static EntityLivingBase getClosestLivingEntity(double parDistance, float tick) {
+	public static LivingEntity getClosestLivingEntity(double parDistance, float tick) {
 		try {
-			EntityLivingBase viewEntity = (mc.getRenderViewEntity() instanceof EntityLivingBase)?(EntityLivingBase)mc.getRenderViewEntity():null;
-			EntityLivingBase Return = null;
+			LivingEntity viewEntity = (mc.getRenderViewEntity() instanceof LivingEntity)?(LivingEntity)mc.getRenderViewEntity():null;
+			LivingEntity Return = null;
 			double closest = parDistance;
 			Vec3d playerPosition;
 			Vec3d lookFarCoord;
 
 			// 見ているエンティティがあるかどうか
-			if ((viewEntity != null) && (viewEntity instanceof EntityLivingBase)) {
+			if ((viewEntity != null) && (viewEntity instanceof LivingEntity)) {
 				World worldObj = viewEntity.world;//　　.worldObj;
-				RayTraceResult objectMouseOver = viewEntity.rayTrace(parDistance, tick, RayTraceFluidMode.ALWAYS);
-
-				// プレイヤーの位置
-				playerPosition = new Vec3d(viewEntity.getPosition());
-//				if (objectMouseOver != null) {
-//					parDistance = getClosestSolidWall(viewEntity, playerPosition, tick, parDistance, 0, 0.0D);
-//				}
+				playerPosition = viewEntity.getPositionVec();
 				// 視線ベクトル
 				Vec3d dirVec = viewEntity.getLookVec();
 				// 視線座標
 				lookFarCoord = playerPosition.add(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance);
 
 				// 視線が当たっているMobを取得
-				List<EntityLivingBase> targettedEntities = worldObj.getEntitiesWithinAABB(EntityLivingBase.class,
-						 viewEntity.getBoundingBox().expand(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance));
+				List<LivingEntity> targettedEntities = worldObj.getEntitiesWithinAABB(LivingEntity.class,
+						 viewEntity.getBoundingBox().expand(dirVec.x * parDistance, dirVec.y * parDistance, dirVec.z * parDistance)
+						 .expand(-1 * dirVec.x * parDistance, -1 * dirVec.y * parDistance, -1 * dirVec.z * parDistance));
 				// 自分自身はMobから外す
 				targettedEntities.remove(viewEntity);
-				for (EntityLivingBase targettedEntity : targettedEntities) {
+				for (LivingEntity targettedEntity : targettedEntities) {
 					if (targettedEntity != null) {
 						// エンティティとの距離
 						double precheck = viewEntity.getDistance(targettedEntity);
 						// 視線が当たっているかどうか確認
-						RayTraceResult mopElIntercept = targettedEntity.getBoundingBox().calculateIntercept(playerPosition.add(0, viewEntity.getEyeHeight(), 0),lookFarCoord);
-						if ((mopElIntercept != null) && (precheck < closest)) {
+						boolean isView = viewEntity.canEntityBeSeen(targettedEntity);
+						precheck = viewEntity.getDistance(targettedEntity);
+						if (isView && closest > precheck) {
 							Return = targettedEntity;
 							closest = precheck;
 							ModLog.log().debug("Hit " + Return.getName());
@@ -140,7 +134,7 @@ public class McEventHandler{
 	public void updateMouseOversSkinned(float Tick) {
 		try {
 			if (mc.player != null) {
-				EntityLivingBase el = getClosestLivingEntity(MyConfig._general.mouseoverRange.get(), Tick);
+				LivingEntity el = getClosestLivingEntity(MyConfig._general.mouseoverRange.get(), Tick);
 				view.setViewEntity(el);
 		}
 		}catch(Exception ex){}
@@ -150,8 +144,8 @@ public class McEventHandler{
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
 	public void tickEvent(TickEvent.ClientTickEvent event) {
-		  EntityPlayer p;
-			if ((Minecraft.getInstance().currentScreen == null) || ((Minecraft.getInstance().currentScreen instanceof GuiChat))) {
+		  PlayerEntity p;
+			if ((Minecraft.getInstance().currentScreen == null) || ((Minecraft.getInstance().currentScreen instanceof ChatScreen))) {
 				p = Minecraft.getInstance().player;
 				if ((p != null) && (p.world != null)) {
 					World world = p.world;
@@ -160,12 +154,12 @@ public class McEventHandler{
 							p.posY - MyConfig._general.mouseoverRange.get(), p.posZ - MyConfig._general.mouseoverRange.get(),
 							p.posX + MyConfig._general.mouseoverRange.get(), p.posY + MyConfig._general.mouseoverRange.get(),
 							p.posZ + MyConfig._general.mouseoverRange.get());
-					List<EntityLivingBase> entityList = world.getEntitiesWithinAABB(EntityLivingBase.class, bb);
+					List<LivingEntity> entityList = world.getEntitiesWithinAABB(LivingEntity.class, bb);
 					if ((entityList != null) && (entityList.size() > 0)) {
-						for (EntityLivingBase el : entityList) {
+						for (LivingEntity el : entityList) {
 							if (el != null) {
-								if (((el instanceof EntityPlayer)) &&
-										(Tools.donators.contains(((EntityPlayer) el).getName().toString().toLowerCase())) &&
+								if (((el instanceof PlayerEntity)) &&
+										(Tools.donators.contains(((PlayerEntity) el).getName().toString().toLowerCase())) &&
 										((el != p) || (Minecraft.getInstance().gameSettings.thirdPersonView != 0))) {
 									double darkness = rnd.nextDouble() / 4.0D;
 								}

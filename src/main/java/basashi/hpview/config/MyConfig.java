@@ -71,8 +71,8 @@ public class MyConfig {
 		public final ForgeConfigSpec.ConfigValue<Integer> locY;
 		public final ForgeConfigSpec.ConfigValue<Integer>  Lifespan;
 		public final ForgeConfigSpec.ConfigValue<Integer> healColor;
-		public final ForgeConfigSpec.ConfigValue<Float> guiScale;
-		public final ForgeConfigSpec.ConfigValue<Float>  Gravity;
+		public final ForgeConfigSpec.ConfigValue<Double> guiScale;
+		public final ForgeConfigSpec.ConfigValue<Double>  Gravity;
 		public final ForgeConfigSpec.ConfigValue<Boolean> DebugHidesWindow;
 
 		public General(Builder builder) {
@@ -112,10 +112,10 @@ public class MyConfig {
 					define("healColor",65280);
 				guiScale = builder.
 					comment("Change the size of the portrait preview.").
-					define("guiScale",0.76F);
+					define("guiScale",0.76D);
 				Gravity = builder.
 					comment("Change this to change the speed that the damage indicators fall, low numbers prevent falling numbers entirely. All positive numbers accepted, 0.8 is default.").
-					define("Gravity",0.8F);
+					define("Gravity",0.8D);
 				DebugHidesWindow = builder.
 					comment("Should the debug window(F3) Hide the portrait window.").
 					define("DebugHidesWindow",true);
